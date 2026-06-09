@@ -8,7 +8,9 @@ WFP_URL = (
     "/resource/9a842d72-0d7d-4922-ad0e-eb8106c1ab0e"
     "/download/wfp_food_prices_phl.csv"
 )
-DESTINATION_FILE = "/content/wfp_food_prices_phl.csv"
+
+###
+DESTINATION_FILE = os.path.join(os.path.dirname(__file__), "wfp_food_prices_phl.csv")
 
 # Download
 print("Downloading dataset from WFP / HDX...")
@@ -23,6 +25,11 @@ else:
         "Download failed. Check your internet connection or\n"
         "verify the WFP URL is still active."
     )
+
+###
+if not os.path.exists(DESTINATION_FILE):
+    print("Downloading dataset from WFP / HDX...")
+    urllib.request.urlretrieve(WFP_URL, DESTINATION_FILE)
     
 # IMPORTS
 import streamlit as st
