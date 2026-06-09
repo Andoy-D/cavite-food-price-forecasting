@@ -16,7 +16,7 @@ DESTINATION_FILE = os.path.join(os.path.dirname(__file__), "wfp_food_prices_phl.
 print("Downloading dataset from WFP / HDX...")
 urllib.request.urlretrieve(WFP_URL, DESTINATION_FILE)
 
-'''# Confirm
+# Confirm
 if os.path.exists(DESTINATION_FILE):
     size_mb = os.path.getsize(DESTINATION_FILE) / (1024 * 1024)
     print(f"✅ Dataset ready at: {DESTINATION_FILE} ({size_mb:.2f} MB)")
@@ -24,12 +24,7 @@ else:
     raise FileNotFoundError(
         "Download failed. Check your internet connection or\n"
         "verify the WFP URL is still active."
-    )'''
-
-###
-if not os.path.exists(DESTINATION_FILE):
-    print("Downloading dataset from WFP / HDX...")
-    urllib.request.urlretrieve(WFP_URL, DESTINATION_FILE)
+    )
     
 # IMPORTS
 import streamlit as st
