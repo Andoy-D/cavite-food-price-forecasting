@@ -658,7 +658,6 @@ def make_bar_chart(df_plot, x, y, color=None, title="", text=None):
 
 
 # PAGE 5 — SIDEBAR NAVIGATION
-# ===== SIDEBAR =====
 
 with st.sidebar:
 
@@ -714,9 +713,9 @@ with st.sidebar:
         font-size:12px;
         line-height:1.8;
     '>
-        <b>Food Price Analytics</b><br>
-        Capstone Project 2025<br>
-        College of Engineering
+        <b>Food Price Machine Learning Prediction</b><br>
+        CPEN 70-Laboratory Finals Capstone Project 2026<br>
+        College of Engineering, Information and Technology
     </div>
     """, unsafe_allow_html=True)
 
@@ -1511,12 +1510,11 @@ elif "About" in page:
     with c1:
         st.markdown("###  Research Objectives")
         st.markdown("""
-        1. Analyze historical food price data in Cavite (2020–2026)
-        2. Visualize monthly and yearly food price trends
-        3. Forecast future food prices using ML regression
-        4. Compare performance of multiple regression algorithms
-        5. Generate decision-support insights for consumers
-        6. Present information via an interactive web dashboard
+        1. To design and develop a user-friendly web application that displays food price forecasts and trends.
+        2. To collect and prepare monthly food price data in Cavite from 2020–2026.
+        3. To apply regression-based machine learning models to predict future food prices.
+        4. To implement data preprocessing techniques, including data cleaning, formatting, and feature engineering.
+        5. To evaluate the accuracy and performance of the developed prediction model.
         """)
 
         st.markdown("###  Dataset Information")
@@ -1538,7 +1536,8 @@ elif "About" in page:
         - **Backend** : Python, Pandas, NumPy, Scikit-Learn
         - **Database** : SQLite
         - **ML Models** : Linear Regression, Decision Tree, Random Forest
-        - **Dev Environment** : Google Colab / VS Code
+        - **Dev Environment** : Github
+        - **Dep Environment** : Streamlit Cloud
         """)
 
         st.markdown("###  Scope and Limitations")
@@ -1553,13 +1552,15 @@ elif "About" in page:
         - Geographic: Cavite only, not other Philippine regions
         - No real-time external factors (weather, oil prices, policy)
         - Accuracy depends on WFP dataset quality
-        - Selected commodities only (55 items from WFP data)
+        - Selected commodities only (56 items from WFP data)
         """)
 
     st.markdown("### Researchers")
     st.markdown("""
     <div class="kpi-card">
-    <b>CPEN Group 2</b><br><br>
+    <b>CPEN 70 - Software Design</b><br><br>
+    <b>Bachelor of Science in Computer Engineering</b><br><br>
+    Group 2<br>
     Alvero, John Andrew B.<br>
     Brioso, Eriz Melvin V.<br>
     Costa, Joshua E.<br>
