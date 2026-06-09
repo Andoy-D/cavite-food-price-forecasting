@@ -660,12 +660,11 @@ def make_bar_chart(df_plot, x, y, color=None, title="", text=None):
 # PAGE 5 — SIDEBAR NAVIGATION
 
 with st.sidebar:
+    #Logo
+_, center_col, _ = st.columns([1, 3, 1])
 
-    # Logo
-    st.image(
-        "https://cdn-icons-png.flaticon.com/512/2920/2920349.png",
-        width=60
-    )
+with center_col:
+    st.image("cvsu_logo.png", use_container_width=True)
 
     # Title
     st.markdown("""
