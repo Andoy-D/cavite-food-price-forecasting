@@ -8,7 +8,7 @@ WFP_URL = (
     "/resource/9a842d72-0d7d-4922-ad0e-eb8106c1ab0e"
     "/download/wfp_food_prices_phl.csv"
 )
-DESTINATION_FILE = "/content/wfp_food_prices_phl.csv"
+DESTINATION_FILE = "/content/"
 
 # Download
 print("Downloading dataset from WFP / HDX...")
