@@ -1,4 +1,29 @@
+import os
+import urllib.request
 
+# WFP Philippines Food Prices Dataset
+# Source: https://data.humdata.org/dataset/wfp-food-prices-for-philippines
+WFP_URL = (
+    "https://data.humdata.org/dataset/ea251823-8694-47b4-82d0-7d27f00e8aba"
+    "/resource/9a842d72-0d7d-4922-ad0e-eb8106c1ab0e"
+    "/download/wfp_food_prices_phl.csv"
+)
+DESTINATION_FILE = "/content/wfp_food_prices_phl.csv"
+
+# Download
+print("Downloading dataset from WFP / HDX...")
+urllib.request.urlretrieve(WFP_URL, DESTINATION_FILE)
+
+# Confirm
+if os.path.exists(DESTINATION_FILE):
+    size_mb = os.path.getsize(DESTINATION_FILE) / (1024 * 1024)
+    print(f"✅ Dataset ready at: {DESTINATION_FILE} ({size_mb:.2f} MB)")
+else:
+    raise FileNotFoundError(
+        "Download failed. Check your internet connection or\n"
+        "verify the WFP URL is still active."
+    )
+    
 # IMPORTS
 import streamlit as st
 import pandas as pd
