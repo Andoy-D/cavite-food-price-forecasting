@@ -661,10 +661,10 @@ def make_bar_chart(df_plot, x, y, color=None, title="", text=None):
 
 with st.sidebar:
     #Logo
-_, center_col, _ = st.columns([1, 3, 1])
+    _, center_col, _ = st.columns([1, 3, 1])
 
-with center_col:
-    st.image("cvsu_logo.png", use_container_width=True)
+    with center_col:
+        st.image("cvsu_logo.png", use_container_width=True)
 
     # Title
     st.markdown("""
