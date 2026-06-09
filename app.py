@@ -900,14 +900,15 @@ elif "Trends" in page:
     st.markdown("*Explore historical price movements for any commodity or category*")
 
     # Filters
-    with st.expander(" Filter Options", expanded=True):
-        fc1, fc2, fc3 = st.columns(3)
-        with fc1:
-            sel_comm_trend = st.selectbox("Commodity", ["All"] + commodities)
-        with fc2:
-            sel_cat_trend  = st.selectbox("Category", ["All"] + categories)
-        with fc3:
-            yr_range = st.slider("Year Range", 2020, 2026, (2020, 2026))
+    st.markdown('<div class="section-header">🔍 Filter Options</div>',
+                unsafe_allow_html=True)
+    fc1, fc2, fc3 = st.columns(3)
+    with fc1:
+        sel_comm_trend = st.selectbox("Commodity", ["All"] + commodities)
+    with fc2:
+        sel_cat_trend  = st.selectbox("Category", ["All"] + categories)
+    with fc3:
+        yr_range = st.slider("Year Range", 2020, 2026, (2020, 2026))
 
     # Apply filters
     dft = df.copy()
