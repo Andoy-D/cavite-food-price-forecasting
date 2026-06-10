@@ -1334,23 +1334,58 @@ elif "Performance" in page:
     st.markdown('<div class="section-header"> Model Comparison Table</div>',
                 unsafe_allow_html=True)
     
-    def style_metrics_table(row):
-        """Highlight the best model row with dark text on green background."""
-        if row["Model"] == best_model_name:
-            return ["background-color: #D4EDDA; color: #064E3B; font-weight: 700;"] * len(row)
-        return ["color: #0F172A; font-weight: 500;"] * len(row)
+    # Build table as HTML for full style control
+    table_rows = ""
+    for _, row in metrics_df.iterrows():
+        is_best = row["Model"] == best_model_name
+        row_bg     = "#D4EDDA" if is_best else "white"
+        row_color  = "#064E3B" if is_best else "#0F172A"
+        row_weight = "700"     if is_best else "500"
+        best_tag   = "Best" if is_best else ""
+        table_rows += f"""
+        <tr style="background:{row_bg}; color:{row_color};
+                   font-weight:{row_weight}; font-size:0.92rem;">
+            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;">
+                {row['Model']}{best_tag}
+            </td>
+            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;
+                       text-align:center;">
+                ₱{row['MAE (₱)']:.4f}
+            </td>
+            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;
+                       text-align:center;">
+                ₱{row['RMSE (₱)']:.4f}
+            </td>
+            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;
+                       text-align:center;">
+                {row['R Score']:.4f}
+            </td>
+        </tr>
+        """
 
-    st.dataframe(
-        metrics_df.style
-            .format({"MAE (₱)": "₱{:.4f}", "RMSE (₱)": "₱{:.4f}",
-                     "R Score": "{:.4f}"})
-            .apply(style_metrics_table, axis=1),
-        use_container_width=True
-    )
-
+    st.markdown(f"""
+    <table style="width:100%; border-collapse:collapse;
+                  border-radius:10px; overflow:hidden;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <thead>
+            <tr style="background:#2563EB; color:white;
+                       font-size:0.85rem; font-weight:600;">
+                <th style="padding:12px 16px; text-align:left;">Model</th>
+                <th style="padding:12px 16px; text-align:center;">MAE (₱)</th>
+                <th style="padding:12px 16px; text-align:center;">RMSE (₱)</th>
+                <th style="padding:12px 16px; text-align:center;">R² Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {table_rows}
+        </tbody>
+    </table>
+    <p style="color:#64748B; font-size:0.78rem; margin-top:8px;">
+        Best performance. Lower MAE/RMSE is better.
+        Higher R² (closer to 1.0) is better.
+    </p>
+    """, unsafe_allow_html=True)
     
-    st.caption("Green = best performance. Lower MAE/RMSE is better. "
-               "Higher R (closer to 1.0) is better.")
 
     # Best model callout
     bm = model_metrics[best_model_name]
