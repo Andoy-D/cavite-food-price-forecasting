@@ -917,7 +917,17 @@ elif "Trends" in page:
     dft = dft[(dft["year"] >= yr_range[0]) & (dft["year"] <= yr_range[1])]
 
     if dft.empty:
-        st.warning("No data for the selected filters. Please adjust.")
+        # Check specifically if it's a commodity/category mismatch
+        if sel_comm_trend != "All" and sel_cat_trend != "All":
+            actual_cat = commodity_to_cat.get(sel_comm_trend, "Unknown")
+            st.warning(
+                f"**'{sel_comm_trend}'** does not belong to the "
+                f"**'{sel_cat_trend}'** category. "
+                f"It is listed under **'{actual_cat}'**. "
+                f"Please adjust your filters."
+            )
+        else:
+            st.warning("No data found for the selected filters. Please adjust.")
         st.stop()
 
     # Summary Stats
