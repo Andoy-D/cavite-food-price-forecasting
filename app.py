@@ -1342,12 +1342,11 @@ elif "Performance" in page:
         row_bg     = "#D4EDDA" if is_best else "white"
         row_color  = "#064E3B" if is_best else "#0F172A"
         row_weight = "700"     if is_best else "500"
-        best_tag   = " Best" if is_best else ""
         table_rows += (
             f'<tr style="background:{row_bg}; color:{row_color}; '
             f'font-weight:{row_weight}; font-size:0.92rem;">'
             f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;">'
-            f'{row["Model"]}{best_tag}</td>'
+            f'{row["Model"]}</td>'
             f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0; text-align:center;">'
             f'₱{row["MAE (₱)"]:.4f}</td>'
             f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0; text-align:center;">'
