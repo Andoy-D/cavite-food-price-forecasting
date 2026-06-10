@@ -1334,20 +1334,21 @@ elif "Performance" in page:
     st.markdown('<div class="section-header"> Model Comparison Table</div>',
                 unsafe_allow_html=True)
     
+    def style_metrics_table(row):
+        """Highlight the best model row with dark text on green background."""
+        if row["Model"] == best_model_name:
+            return ["background-color: #D4EDDA; color: #064E3B; font-weight: 700;"] * len(row)
+        return ["color: #0F172A; font-weight: 500;"] * len(row)
+
     st.dataframe(
         metrics_df.style
             .format({"MAE (₱)": "₱{:.4f}", "RMSE (₱)": "₱{:.4f}",
                      "R Score": "{:.4f}"})
-            .highlight_min(subset=["MAE (₱)", "RMSE (₱)"],
-                           color="#D4EDDA")
-            .highlight_max(subset=["R Score"],
-                           color="#D4EDDA")
-            .set_properties(**{
-                "color": "#0F172A",
-                "font-weight": "500"
-            }),
+            .apply(style_metrics_table, axis=1),
         use_container_width=True
     )
+
+    
     st.caption("Green = best performance. Lower MAE/RMSE is better. "
                "Higher R (closer to 1.0) is better.")
 
