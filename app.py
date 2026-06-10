@@ -787,14 +787,33 @@ if "Dashboard" in page:
     k1, k2, k3, k4, k5, k6 = st.columns(6)
 
     # Total Commodities — clickable
+    # Total Commodities — clickable card
     with k1:
+        active_style = "border: 2px solid #2563EB; background: #EFF6FF;" if st.session_state["show_commodity_list"] else ""
         st.markdown(f"""
-        <div class="kpi-card">
+        <div class="kpi-card" style="cursor:pointer; {active_style}">
             <div class="kpi-label">Total Commodities</div>
             <div class="kpi-value">{total_comms}</div>
-            <div class="kpi-sub">tracked in Cavite</div>
+            <div class="kpi-sub">🔍 Click to view full list</div>
         </div>""", unsafe_allow_html=True)
-        if st.button("📋 View Full List", use_container_width=True):
+        # Invisible button overlaid on top of the card to capture the click
+        st.markdown("""
+        <style>
+        div[data-testid="column"]:first-child .stButton button {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        div[data-testid="column"]:first-child .stButton {
+            position: relative;
+            margin-top: -110px;
+            height: 100px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        if st.button("toggle", key="toggle_comm_list"):
             st.session_state["show_commodity_list"] = (
                 not st.session_state["show_commodity_list"]
             )
