@@ -771,6 +771,10 @@ if "Dashboard" in page:
     st.markdown("##  Dashboard")
     st.markdown("*Cavite Food Price Analytics — Monthly Overview 2020–2026*")
 
+    # Session state for commodity list toggle
+    if "show_commodity_list" not in st.session_state:
+        st.session_state["show_commodity_list"] = False
+
     # KPI Cards
     latest_date  = df["date"].max()
     avg_price    = df["price"].mean()
@@ -779,9 +783,24 @@ if "Dashboard" in page:
     max_comm     = df.groupby("commodity")["price"].mean().idxmax()
     min_comm     = df.groupby("commodity")["price"].mean().idxmin()
 
+    
     k1, k2, k3, k4, k5, k6 = st.columns(6)
+
+    # Total Commodities — clickable
+    with k1:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-label">Total Commodities</div>
+            <div class="kpi-value">{total_comms}</div>
+            <div class="kpi-sub">tracked in Cavite</div>
+        </div>""", unsafe_allow_html=True)
+        if st.button("📋 View Full List", use_container_width=True):
+            st.session_state["show_commodity_list"] = (
+                not st.session_state["show_commodity_list"]
+            )
+
+    # Remaining KPI cards unchanged
     kpis = [
-        (k1, "Total Commodities", total_comms, "tracked in Cavite"),
         (k2, "Total Records",     f"{total_recs:,}", "cleaned entries"),
         (k3, "Average Price",     f"₱{avg_price:,.2f}", "all commodities"),
         (k4, "Highest-Priced",    max_comm[:18],  "by avg price"),
@@ -796,6 +815,34 @@ if "Dashboard" in page:
             <div class="kpi-sub">{sub}</div>
         </div>""", unsafe_allow_html=True)
 
+    # Commodity list panel — shows/hides on button click
+    if st.session_state["show_commodity_list"]:
+        st.markdown('<div class="section-header">📋 All Commodities</div>',
+                    unsafe_allow_html=True)
+
+        comm_list = (
+            df[["commodity", "category"]]
+            .drop_duplicates()
+            .sort_values("commodity")
+            .reset_index(drop=True)
+        )
+        comm_list.index += 1  # Start numbering from 1
+        comm_list.columns = ["Commodity", "Category"]
+
+        # Category filter for the list
+        cat_filter = st.selectbox(
+            "Filter by Category",
+            ["All"] + sorted(comm_list["Category"].unique()),
+            key="comm_list_cat_filter"
+        )
+        if cat_filter != "All":
+            comm_list = comm_list[comm_list["Category"] == cat_filter]
+
+        st.dataframe(comm_list, use_container_width=True, height=500)
+        st.caption(f"Showing {len(comm_list)} commodities"
+                   + (f" in '{cat_filter}'" if cat_filter != "All" else " across all categories"))
+
+    
     st.markdown("---")
 
     # Row 1: Monthly average + Historical trend
