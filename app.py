@@ -71,7 +71,7 @@ html, body, [class*="css"] {
     background-color: #F7F8FC;
 }
 
-
+#MainMenu {display:none;}
 footer {display:none;}
 
 /* ===== SIDEBAR ===== */
