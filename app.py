@@ -920,15 +920,36 @@ elif "Trends" in page:
         # Check specifically if it's a commodity/category mismatch
         if sel_comm_trend != "All" and sel_cat_trend != "All":
             actual_cat = commodity_to_cat.get(sel_comm_trend, "Unknown")
-            st.warning(
-                f"**'{sel_comm_trend}'** does not belong to the "
-                f"**'{sel_cat_trend}'** category. "
-                f"It is listed under **'{actual_cat}'**. "
-                f"Please adjust your filters."
-            )
+            st.markdown(f"""
+            <div style="
+                background: #FFF3E0;
+                border-left: 4px solid #E65100;
+                border-radius: 8px;
+                padding: 14px 18px;
+                margin: 8px 0;
+                color: #7A2500;
+                font-size: 0.92rem;
+            ">
+                ⚠️ <b>'{sel_comm_trend}'</b> does not belong to the
+                <b>'{sel_cat_trend}'</b> category.
+                It is listed under <b>'{actual_cat}'</b>.
+                Please adjust your filters.
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.warning("No data found for the selected filters. Please adjust.")
-        st.stop()
+            st.markdown("""
+            <div style="
+                background: #FFF3E0;
+                border-left: 4px solid #E65100;
+                border-radius: 8px;
+                padding: 14px 18px;
+                margin: 8px 0;
+                color: #7A2500;
+                font-size: 0.92rem;
+            ">
+                ⚠️ No data found for the selected filters. Please adjust.
+            </div>
+            """, unsafe_allow_html=True)
 
     # Summary Stats
     s1, s2, s3, s4 = st.columns(4)
