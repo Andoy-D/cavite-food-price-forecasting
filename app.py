@@ -56,7 +56,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CUSTOM CSS — Light yellow + gray-brown professional theme
+# CUSTOM CSS — Blue professional theme
 st.markdown("""
 <style>
 /* Global */
