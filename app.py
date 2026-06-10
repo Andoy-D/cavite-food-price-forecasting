@@ -1333,7 +1333,8 @@ elif "Performance" in page:
     # Performance Table
     st.markdown('<div class="section-header"> Model Comparison Table</div>',
                 unsafe_allow_html=True)
-    
+
+
     # Build table as HTML for full style control
     table_rows = ""
     for _, row in metrics_df.iterrows():
@@ -1341,70 +1342,54 @@ elif "Performance" in page:
         row_bg     = "#D4EDDA" if is_best else "white"
         row_color  = "#064E3B" if is_best else "#0F172A"
         row_weight = "700"     if is_best else "500"
-        best_tag   = "Best" if is_best else ""
-        table_rows += f"""
-        <tr style="background:{row_bg}; color:{row_color};
-                   font-weight:{row_weight}; font-size:0.92rem;">
-            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;">
-                {row['Model']}{best_tag}
-            </td>
-            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;
-                       text-align:center;">
-                ₱{row['MAE (₱)']:.4f}
-            </td>
-            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;
-                       text-align:center;">
-                ₱{row['RMSE (₱)']:.4f}
-            </td>
-            <td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;
-                       text-align:center;">
-                {row['R Score']:.4f}
-            </td>
-        </tr>
-        """
+        best_tag   = " Best" if is_best else ""
+        table_rows += (
+            f'<tr style="background:{row_bg}; color:{row_color}; '
+            f'font-weight:{row_weight}; font-size:0.92rem;">'
+            f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0;">'
+            f'{row["Model"]}{best_tag}</td>'
+            f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0; text-align:center;">'
+            f'₱{row["MAE (₱)"]:.4f}</td>'
+            f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0; text-align:center;">'
+            f'₱{row["RMSE (₱)"]:.4f}</td>'
+            f'<td style="padding:12px 16px; border-bottom:1px solid #E2E8F0; text-align:center;">'
+            f'{row["R Score"]:.4f}</td>'
+            f'</tr>'
+        )
 
-    st.markdown(f"""
-    <table style="width:100%; border-collapse:collapse;
-                  border-radius:10px; overflow:hidden;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-        <thead>
-            <tr style="background:#2563EB; color:white;
-                       font-size:0.85rem; font-weight:600;">
-                <th style="padding:12px 16px; text-align:left;">Model</th>
-                <th style="padding:12px 16px; text-align:center;">MAE (₱)</th>
-                <th style="padding:12px 16px; text-align:center;">RMSE (₱)</th>
-                <th style="padding:12px 16px; text-align:center;">R² Score</th>
-            </tr>
-        </thead>
-        <tbody>
-            {table_rows}
-        </tbody>
-    </table>
-    <p style="color:#64748B; font-size:0.78rem; margin-top:8px;">
-        Best performance. Lower MAE/RMSE is better.
-        Higher R² (closer to 1.0) is better.
-    </p>
-    """, unsafe_allow_html=True)
-    
+    table_html = (
+        '<table style="width:100%; border-collapse:collapse; '
+        'border-radius:10px; overflow:hidden; '
+        'box-shadow:0 2px 8px rgba(0,0,0,0.08);">'
+        '<thead><tr style="background:#2563EB; color:white; '
+        'font-size:0.85rem; font-weight:600;">'
+        '<th style="padding:12px 16px; text-align:left;">Model</th>'
+        '<th style="padding:12px 16px; text-align:center;">MAE (₱)</th>'
+        '<th style="padding:12px 16px; text-align:center;">RMSE (₱)</th>'
+        '<th style="padding:12px 16px; text-align:center;">R² Score</th>'
+        '</tr></thead>'
+        '<tbody>' + table_rows + '</tbody>'
+        '</table>'
+        '<p style="color:#64748B; font-size:0.78rem; margin-top:8px;">'
+        'Best performance. Lower MAE/RMSE is better. '
+        'Higher R² (closer to 1.0) is better.</p>'
+    )
+
+    st.markdown(table_html, unsafe_allow_html=True)
 
     # Best model callout
     bm = model_metrics[best_model_name]
-    st.markdown(f"""
-    <div style="
-        background: #D1FAE5;
-        border-left: 4px solid #065F46;
-        border-radius: 8px;
-        padding: 14px 18px;
-        margin: 8px 0;
-        color: #064E3B;
-        font-size: 0.92rem;
-        font-weight: 500;
-    ">
-        ✅ <b>Best Model: {best_model_name}</b> —
-        MAE=₱{bm['MAE']:.2f}, RMSE=₱{bm['RMSE']:.2f}, R²={bm['R2']:.4f}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="background:#D1FAE5; border-left:4px solid #065F46; '
+        f'border-radius:8px; padding:14px 18px; margin:8px 0; '
+        f'color:#064E3B; font-size:0.92rem; font-weight:500;">'
+        f'<b>Best Model: {best_model_name}</b> — '
+        f'MAE=₱{bm["MAE"]:.2f}, RMSE=₱{bm["RMSE"]:.2f}, R²={bm["R2"]:.4f}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
+    
     # Grouped bar chart
     st.markdown('<div class="section-header"> Performance Comparison Charts</div>',
                 unsafe_allow_html=True)
