@@ -71,8 +71,14 @@ html, body, [class*="css"] {
     background-color: #F7F8FC;
 }
 
-#MainMenu {display:none;}
+/* #MainMenu {display:none;} */
 footer {display:none;}
+
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
 
 /* ===== SIDEBAR ===== */
 
