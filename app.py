@@ -1333,6 +1333,7 @@ elif "Performance" in page:
     # Performance Table
     st.markdown('<div class="section-header"> Model Comparison Table</div>',
                 unsafe_allow_html=True)
+    
     st.dataframe(
         metrics_df.style
             .format({"MAE (₱)": "₱{:.4f}", "RMSE (₱)": "₱{:.4f}",
@@ -1340,7 +1341,11 @@ elif "Performance" in page:
             .highlight_min(subset=["MAE (₱)", "RMSE (₱)"],
                            color="#D4EDDA")
             .highlight_max(subset=["R Score"],
-                           color="#D4EDDA"),
+                           color="#D4EDDA")
+            .set_properties(**{
+                "color": "#0F172A",
+                "font-weight": "500"
+            }),
         use_container_width=True
     )
     st.caption("Green = best performance. Lower MAE/RMSE is better. "
@@ -1348,8 +1353,21 @@ elif "Performance" in page:
 
     # Best model callout
     bm = model_metrics[best_model_name]
-    st.success(f"**Best Model: {best_model_name}** — "
-               f"MAE=₱{bm['MAE']:.2f}, RMSE=₱{bm['RMSE']:.2f}, R={bm['R2']:.4f}")
+    st.markdown(f"""
+    <div style="
+        background: #D1FAE5;
+        border-left: 4px solid #065F46;
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin: 8px 0;
+        color: #064E3B;
+        font-size: 0.92rem;
+        font-weight: 500;
+    ">
+        ✅ <b>Best Model: {best_model_name}</b> —
+        MAE=₱{bm['MAE']:.2f}, RMSE=₱{bm['RMSE']:.2f}, R²={bm['R2']:.4f}
+    </div>
+    """, unsafe_allow_html=True)
 
     # Grouped bar chart
     st.markdown('<div class="section-header"> Performance Comparison Charts</div>',
