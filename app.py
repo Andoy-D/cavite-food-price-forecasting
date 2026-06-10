@@ -786,41 +786,15 @@ if "Dashboard" in page:
     
     k1, k2, k3, k4, k5, k6 = st.columns(6)
 
-    # Total Commodities — styled as KPI card but is actually a button
+    # Total Commodities — clickable
     with k1:
-        active_bg    = "#EFF6FF" if st.session_state["show_commodity_list"] else "white"
-        active_border = "2px solid #2563EB" if st.session_state["show_commodity_list"] else "2px solid transparent"
         st.markdown(f"""
-        <style>
-        div[data-testid="column"]:nth-child(1) button[kind="secondary"] {{
-            background: {active_bg} !important;
-            border: {active_border} !important;
-            border-left: 4px solid #2563EB !important;
-            border-radius: 12px !important;
-            padding: 20px 24px !important;
-            width: 100% !important;
-            height: auto !important;
-            text-align: left !important;
-            box-shadow: 0 2px 8px rgba(74,55,40,0.10) !important;
-            color: inherit !important;
-            cursor: pointer !important;
-            line-height: 1.5 !important;
-            margin-bottom: 12px !important;
-            display: block !important;
-            white-space: normal !important;
-        }}
-        div[data-testid="column"]:nth-child(1) button[kind="secondary"]:hover {{
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 12px rgba(37,99,235,0.2) !important;
-            background: #EFF6FF !important;
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-        if st.button(
-            f"TOTAL COMMODITIES\n{total_comms}\ntracked in Cavite  •  🔍 click to view list",
-            key="toggle_comm_list",
-            use_container_width=True
-        ):
+        <div class="kpi-card">
+            <div class="kpi-label">Total Commodities</div>
+            <div class="kpi-value">{total_comms}</div>
+            <div class="kpi-sub">tracked in Cavite</div>
+        </div>""", unsafe_allow_html=True)
+        if st.button("📋 View Full List", use_container_width=True):
             st.session_state["show_commodity_list"] = (
                 not st.session_state["show_commodity_list"]
             )
