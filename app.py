@@ -1,22 +1,22 @@
 import os
 import urllib.request
 
-# WFP Philippines Food Prices Dataset
-# Source: https://data.humdata.org/dataset/wfp-food-prices-for-philippines
+# The WFP Philippines Food Prices Dataset
+# Source of our dataset: https://data.humdata.org/dataset/wfp-food-prices-for-philippines
 WFP_URL = (
     "https://data.humdata.org/dataset/ea251823-8694-47b4-82d0-7d27f00e8aba"
     "/resource/9a842d72-0d7d-4922-ad0e-eb8106c1ab0e"
     "/download/wfp_food_prices_phl.csv"
 )
 
-####
+
 DESTINATION_FILE = os.path.join(os.path.dirname(__file__), "wfp_food_prices_phl.csv")
 
-# Download
+# Download the wfp dataset
 print("Downloading dataset from WFP / HDX...")
 urllib.request.urlretrieve(WFP_URL, DESTINATION_FILE)
 
-# Confirm
+# Confirm path
 if os.path.exists(DESTINATION_FILE):
     size_mb = os.path.getsize(DESTINATION_FILE) / (1024 * 1024)
     print(f"✅ Dataset ready at: {DESTINATION_FILE} ({size_mb:.2f} MB)")
@@ -26,7 +26,7 @@ else:
         "verify the WFP URL is still active."
     )
     
-# IMPORTS
+# Import
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -48,7 +48,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 warnings.filterwarnings("ignore")
 
-# PAGE CONFIG — Must be FIRST Streamlit call
+# configuration of page (streamlit)
 st.set_page_config(
     page_title="Cavite Food Price Forecasting",
     page_icon="",
@@ -56,7 +56,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CUSTOM CSS — Blue professional theme
+# Ui (blue)
 st.markdown("""
 <style>
 /* Global */
@@ -318,8 +318,8 @@ h1, h2, h3, h4, h5, h6 {
 </style>
 """, unsafe_allow_html=True)
 
-# PAGE 1 — DATA LOADING & PREPROCESSING
-# Common file name variations the user might have
+# preprocessing 
+# Common file name
 POSSIBLE_CSV_NAMES = [
     "wfp_food_prices_phl.csv",
     "wfp_food_prices_phl (1).csv",
@@ -339,7 +339,7 @@ def load_and_preprocess(uploaded_file=None):
         date, admin1, admin2, market, category, commodity,
         commodity_id, unit, priceflag, pricetype, currency, price, usdprice
     """
-    # 1. Load the raw CSV
+    # Load the raw CSV
     if uploaded_file is not None:
         df_raw = pd.read_csv(uploaded_file, low_memory=False)
     else:
@@ -353,11 +353,11 @@ def load_and_preprocess(uploaded_file=None):
         if not found:
             return None, "CSV_NOT_FOUND"
 
-    # 2. Standardise column names (lowercase, strip spaces)
+    # standardize the column names
     df_raw.columns = df_raw.columns.str.lower().str.strip()
 
-    # The WFP dataset sometimes uses 'admin2' for province
-    # Cavite appears in admin2 (province) field
+    # search and confirm for data set, admin2(cavite) 
+
     cavite_col = None
     for col in ["admin2", "admin1"]:
         if col in df_raw.columns:
@@ -366,23 +366,23 @@ def load_and_preprocess(uploaded_file=None):
     if cavite_col is None:
         return None, "COLUMN_NOT_FOUND"
 
-    # 3. Filter: Cavite, PHP, 2020–2026
+    # apply the filter: Cavite, PHP, 2020–2026
     df = df_raw.copy()
 
-    # Filter to Cavite
+    # filter to Cavite
     df = df[df[cavite_col].str.contains("Cavite", case=False, na=False)]
 
-    # Keep only PHP prices
+    #Keep only peso prices
     if "currency" in df.columns:
         df = df[df["currency"].str.upper() == "PHP"]
 
-    # Parse date
+    #Parse the date
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df = df.dropna(subset=["date"])
     df["year"]  = df["date"].dt.year
     df["month"] = df["date"].dt.month
 
-    # Filter years 2020–2026
+    # filter the years 2020–2026
     df = df[(df["year"] >= 2020) & (df["year"] <= 2026)]
 
     if df.empty:
@@ -390,7 +390,7 @@ def load_and_preprocess(uploaded_file=None):
 
 
 
-    # 4. Select & rename relevant columns
+    #Select and rename relevant columns
     rename_map = {}
     for src, dst in [("category", "category"), ("commodity", "commodity"),
                      ("commodity_id", "commodity_id"), ("price", "price"),
@@ -399,12 +399,12 @@ def load_and_preprocess(uploaded_file=None):
             rename_map[src] = dst
     df = df.rename(columns=rename_map)
 
-    # Make sure we have the mandatory columns
+    #ensure mandatory columns
     for col in ["commodity", "price", "year", "month", "category"]:
         if col not in df.columns:
             df[col] = "Unknown" if col in ["commodity", "category"] else 0
 
-    # 5. Clean
+    #Clean
     df["price"] = pd.to_numeric(df["price"], errors="coerce")
     df = df.dropna(subset=["price"])
     df = df[df["price"] > 0]
@@ -420,15 +420,15 @@ def load_and_preprocess(uploaded_file=None):
         clean_frames.append(filtered)
     df = pd.concat(clean_frames).reset_index(drop=True)
 
-    # 6. Encode features for ML
-    # Commodity ID: use existing numeric ID or encode
+    #Encode features for ML
+    # Commodity ID: for existing numeric ID or encode
     if "commodity_id" not in df.columns or df["commodity_id"].isna().all():
         le_comm = LabelEncoder()
         df["commodity_id"] = le_comm.fit_transform(df["commodity"].astype(str))
     else:
         df["commodity_id"] = pd.to_numeric(df["commodity_id"], errors="coerce")
 
-        # ✅ Fix: wrap ndarray in Series with matching index before fillna
+        # wrap ndarray in series with matching index before fillna
         missing_mask = df["commodity_id"].isna()
         if missing_mask.any():
             le_comm = LabelEncoder()
@@ -438,13 +438,13 @@ def load_and_preprocess(uploaded_file=None):
 
         df["commodity_id"] = df["commodity_id"].astype(int)
 
-    # Category encoding: 0–3 based on category group
+    #Category encoding, 0–3 based on category group
     cat_map = {}
     for i, cat in enumerate(sorted(df["category"].dropna().unique())):
         cat_map[cat] = i
     df["category_id"] = df["category"].map(cat_map).fillna(0).astype(int)
 
-    # Month name for display
+    #Month name for display
     month_names = {1:"Jan",2:"Feb",3:"Mar",4:"Apr",5:"May",6:"Jun",
                    7:"Jul",8:"Aug",9:"Sep",10:"Oct",11:"Nov",12:"Dec"}
     df["month_name"] = df["month"].map(month_names)
@@ -452,13 +452,13 @@ def load_and_preprocess(uploaded_file=None):
     return df, "OK"
 
 
-# PAGE 2 — SQLITE DATABASE
+#SQLITE DATABASE
 def init_database(df):
     """Create SQLite database and populate it from the cleaned DataFrame."""
     conn = sqlite3.connect("food_prices.db")
     cursor = conn.cursor()
 
-    # Table: food_prices
+    # Table for food_prices
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS food_prices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -472,7 +472,7 @@ def init_database(df):
         )
     """)
 
-    # Table: predictions
+    # Table for predictions
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS predictions (
             prediction_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -485,7 +485,7 @@ def init_database(df):
         )
     """)
 
-    # Table: model_metrics
+    # Table for model_metrics
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS model_metrics (
             model_name TEXT PRIMARY KEY,
@@ -495,7 +495,7 @@ def init_database(df):
         )
     """)
 
-    # Insert food price data (clear first to avoid duplicates on reload)
+    # Insert the food price data (clear first for reload)
     cursor.execute("DELETE FROM food_prices")
     records = df[["date", "year", "month", "commodity", "commodity_id",
                   "category", "price"]].copy()
@@ -520,7 +520,7 @@ def save_prediction(commodity, month, year, predicted_price, model_used):
     conn.close()
 
 
-# PAGE — MACHINE LEARNING
+#MACHINE LEARNING
 @st.cache_data(show_spinner=False)
 def train_models(df):
     """
@@ -530,7 +530,7 @@ def train_models(df):
     Features: year, month, commodity_id, category_id
     Target  : price (₱)
     """
-    # Feature matrix and target
+    #Feature the matrix and target
     features = ["year", "month", "commodity_id", "category_id"]
     X = df[features].values
     y = df["price"].values
@@ -563,7 +563,7 @@ def train_models(df):
         trained[name] = model
         metrics[name] = {"MAE": mae, "RMSE": rmse, "R2": r2}
 
-    # Persist metrics to database
+    #Persist the metrics to database
     conn = sqlite3.connect("food_prices.db")
     conn.execute("DELETE FROM model_metrics")
     for name, m in metrics.items():
@@ -583,7 +583,7 @@ def predict_price(trained_models, model_name, year, month,
     model = trained_models[model_name]
     X_input = np.array([[year, month, commodity_id, category_id]])
     pred = model.predict(X_input)[0]
-    return max(pred, 0.0)   # Price cannot be negative
+    return max(pred, 0.0)   # our peso cannot be negative
 
 
 def generate_forecast_series(trained_models, model_name,
@@ -608,7 +608,7 @@ def generate_forecast_series(trained_models, model_name,
 
 
 
-# PAGE 4 — PLOTLY CHART HELPERS (consistent color palette)
+# PLOTLY CHART HELPERS (color palette consistency)
 PALETTE = ["#2563EB","#3B82F6","#60A5FA","#93C5FD","#1D4ED8",
            "#06B6D4","#8B5CF6","#14B8A6"]
 
@@ -657,7 +657,7 @@ def make_bar_chart(df_plot, x, y, color=None, title="", text=None):
     return fig
 
 
-# PAGE 5 — SIDEBAR NAVIGATION
+#SIDEBAR NAVIGATION
 
 with st.sidebar:
     #Logo
@@ -666,7 +666,7 @@ with st.sidebar:
     with center_col:
         st.image("cvsu_logo.png", use_container_width=True)
 
-    # Title
+    #Title
     st.markdown("""
 <div style="
     color:white;
@@ -688,7 +688,7 @@ with st.sidebar:
 </div>
 """, unsafe_allow_html=True)
 
-    # Navigation
+    #Navigation
     page = st.radio(
         "",
         [
@@ -705,7 +705,7 @@ with st.sidebar:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Footer
+    #Footer
     st.markdown("""
     <div style='
         color:#B8C7E0;
@@ -719,7 +719,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 
-# SECTION 6 — LOAD DATA & TRAIN MODELS
+#LOAD THE DATA & TRAIN MODELS
 with st.spinner("Loading and preprocessing data…"):
     df, status = load_and_preprocess(None)
 
@@ -742,16 +742,16 @@ if status != "OK" or df is None:
     st.stop()
 
 
-# Initialise database only once per session
+#Initialise database only once per session
 if "db_initialized" not in st.session_state:
     init_database(df)
     st.session_state["db_initialized"] = True
 
-# Train models
+#Train models
 with st.spinner("Training machine learning models…"):
     trained_models, model_metrics = train_models(df)
 
-# Derived lookup structures
+#the derived lookup structures
 commodities      = sorted(df["commodity"].unique())
 categories       = sorted(df["category"].dropna().unique())
 commodity_to_id  = df.groupby("commodity")["commodity_id"].first().to_dict()
@@ -764,14 +764,14 @@ month_names_full = {1:"January",2:"February",3:"March",4:"April",
 
 
 
-# SECTION 1 — DASHBOARD
+#DASHBOARD
 
 
 if "Dashboard" in page:
     st.markdown("##  Dashboard")
     st.markdown("*Cavite Food Price Analytics — Monthly Overview 2020–2026*")
 
-    # Session state for commodity list toggle
+    #Session state for the commodity list toggle
     if "show_commodity_list" not in st.session_state:
         st.session_state["show_commodity_list"] = False
 
@@ -786,7 +786,7 @@ if "Dashboard" in page:
     
     k1, k2, k3, k4, k5, k6 = st.columns(6)
 
-    # Total Commodities — clickable
+    #Total Commodities(interactable)
     with k1:
         st.markdown(f"""
         <div class="kpi-card">
@@ -799,7 +799,7 @@ if "Dashboard" in page:
                 not st.session_state["show_commodity_list"]
             )
 
-    # Remaining KPI cards unchanged
+    #Leave remaining KPI cards unchanged
     kpis = [
         (k2, "Total Records",     f"{total_recs:,}", "cleaned entries"),
         (k3, "Average Price",     f"₱{avg_price:,.2f}", "all commodities"),
@@ -815,7 +815,7 @@ if "Dashboard" in page:
             <div class="kpi-sub">{sub}</div>
         </div>""", unsafe_allow_html=True)
 
-    # Commodity list panel — shows/hides on button click
+    # Commodity list panel(show and hide buttons)
     if st.session_state["show_commodity_list"]:
         st.markdown('<div class="section-header">📋 All Commodities</div>',
                     unsafe_allow_html=True)
@@ -826,10 +826,10 @@ if "Dashboard" in page:
             .sort_values("commodity")
             .reset_index(drop=True)
         )
-        comm_list.index += 1  # Start numbering from 1
+        comm_list.index += 1  #start numbering from 1
         comm_list.columns = ["Commodity", "Category"]
 
-        # Category filter for the list
+        #category filter for the list
         cat_filter = st.selectbox(
             "Filter by Category",
             ["All"] + sorted(comm_list["Category"].unique()),
@@ -845,7 +845,7 @@ if "Dashboard" in page:
     
     st.markdown("---")
 
-    # Row 1: Monthly average + Historical trend
+    #Monthly average and Historical trend
     c1, c2 = st.columns([1, 1])
     with c1:
         st.markdown('<div class="section-header"> Monthly Average Food Prices</div>',
@@ -874,7 +874,7 @@ if "Dashboard" in page:
                            legend=dict(font=dict(color="#3A2A1A", size=12)))
         st.plotly_chart(fig2, use_container_width=True)
 
-    # Row 2: Top 10 + Year-over-year
+    #Top 10 and Year-over-year
     c3, c4 = st.columns([1, 1])
     with c3:
         st.markdown('<div class="section-header"> Top 10 Most Expensive Commodities</div>',
@@ -899,7 +899,7 @@ if "Dashboard" in page:
         fig4.update_traces(text=yr_avg["price"].round(0).astype(int).astype(str).add(" ₱"))
         st.plotly_chart(fig4, use_container_width=True)
 
-    # Insights
+    #Insights
     st.markdown('<div class="section-header"> Quick Insights</div>',
                 unsafe_allow_html=True)
 
@@ -938,13 +938,13 @@ if "Dashboard" in page:
         </div>""", unsafe_allow_html=True)
 
 
-# SECTION 2 — FOOD PRICE TRENDS
+#FOOD PRICE TRENDS
 
 elif "Trends" in page:
     st.markdown("##  Food Price Trends")
     st.markdown("*Explore historical price movements for any commodity or category*")
 
-    # Filters
+    #Filters
     st.markdown('<div class="section-header">🔍 Filter Options</div>',
                 unsafe_allow_html=True)
     fc1, fc2, fc3 = st.columns(3)
@@ -955,7 +955,7 @@ elif "Trends" in page:
     with fc3:
         yr_range = st.slider("Year Range", 2020, 2026, (2020, 2026))
 
-    # Apply filters
+    #Apply the filters
     dft = df.copy()
     if sel_comm_trend != "All":
         dft = dft[dft["commodity"] == sel_comm_trend]
@@ -964,7 +964,7 @@ elif "Trends" in page:
     dft = dft[(dft["year"] >= yr_range[0]) & (dft["year"] <= yr_range[1])]
 
     if dft.empty:
-        # Check specifically if it's a commodity/category mismatch
+        #Check specifically if it's a commodity/category mismatch for error handling
         if sel_comm_trend != "All" and sel_cat_trend != "All":
             actual_cat = commodity_to_cat.get(sel_comm_trend, "Unknown")
             st.markdown(f"""
@@ -998,7 +998,7 @@ elif "Trends" in page:
             </div>
             """, unsafe_allow_html=True)
 
-    # Summary Stats
+    #Summary of Stats
     s1, s2, s3, s4 = st.columns(4)
     stats = [
         (s1, "Average Price",   f"₱{dft['price'].mean():.2f}"),
@@ -1012,7 +1012,7 @@ elif "Trends" in page:
             <div class="kpi-value">{val}</div>
         </div>""", unsafe_allow_html=True)
 
-    # Historical Trend Chart
+    #Historical Trend Chart
     st.markdown('<div class="section-header"> Historical Price Trend</div>',
                 unsafe_allow_html=True)
     trend_data = (dft.groupby(["year", "month"])["price"].mean().reset_index())
@@ -1028,7 +1028,7 @@ elif "Trends" in page:
                           name="Data Points", showlegend=True)
     st.plotly_chart(fig_trend, use_container_width=True)
 
-    # Monthly Movement + YoY
+    #Monthly Movement and YoY
     c_a, c_b = st.columns(2)
     with c_a:
         st.markdown('<div class="section-header"> Monthly Price Movement</div>',
@@ -1062,7 +1062,7 @@ elif "Trends" in page:
         )
         st.plotly_chart(fig_yoy, use_container_width=True)
 
-    # Seasonal Analysis
+    #Seasonal Analysis
     st.markdown('<div class="section-header"> Seasonal Pattern (Average by Month across Years)</div>',
                 unsafe_allow_html=True)
     seasonal = dft.groupby(["year", "month", "month_name"])["price"].mean().reset_index()
@@ -1083,13 +1083,13 @@ elif "Trends" in page:
     st.plotly_chart(fig_sea, use_container_width=True)
 
 
-# SECTION 3 — FOOD PRICE FORECASTING
+#FOOD PRICE FORECASTING
 
 elif "Forecast" in page:
     st.markdown("##  Food Price Forecasting")
     st.markdown("*Predict future food prices using machine learning regression models*")
 
-    # Input Panel
+    #Input Panel
     st.markdown('<div class="section-header"> Prediction Parameters</div>',
                 unsafe_allow_html=True)
 
@@ -1133,7 +1133,7 @@ elif "Forecast" in page:
             sel_year_fc, sel_month_num, n_months
         )
 
-        # Primary result box
+        #Primary result box
         first_pred = forecast_df["Predicted Price (₱)"].iloc[0]
         save_prediction(sel_comm_fc, sel_month_num, sel_year_fc,
                         first_pred, sel_model_fc)
@@ -1154,7 +1154,7 @@ elif "Forecast" in page:
             </div>""", unsafe_allow_html=True)
 
         with col_inf:
-            # Show model accuracy for context
+            #Show model accuracy for context
             m = model_metrics[sel_model_fc]
             st.markdown("**Model Performance (on held-out test set)**")
             st.markdown(f"""
@@ -1169,12 +1169,12 @@ elif "Forecast" in page:
                     f"**₱{max(0, first_pred - m['MAE']):.2f}** and "
                     f"**₱{first_pred + m['MAE']:.2f}**.")
 
-        # Forecast table + chart
+        #Forecast table and chart
         if n_months > 1:
             st.markdown('<div class="section-header"> Forecast Series</div>',
                         unsafe_allow_html=True)
 
-            # Get historical data for this commodity
+            #Get the historical data for this commodity
             hist = (df[df["commodity"] == sel_comm_fc]
                     .groupby(["year", "month"])["price"].mean().reset_index())
             hist["Date"] = (hist["year"].astype(str) + "-"
@@ -1182,14 +1182,14 @@ elif "Forecast" in page:
             hist = hist.sort_values("Date")
 
             fig_fc = go.Figure()
-            # Historical line
+            #Historical line
             fig_fc.add_trace(go.Scatter(
                 x=hist["Date"], y=hist["price"],
                 name="Historical Price", mode="lines+markers",
                 line=dict(color="#4A3728", width=2),
                 marker=dict(size=4)
             ))
-            # Forecast line
+            #Forecast line
             fig_fc.add_trace(go.Scatter(
                 x=forecast_df["Date"], y=forecast_df["Predicted Price (₱)"],
                 name=f"Forecast ({sel_model_fc})", mode="lines+markers",
@@ -1215,7 +1215,7 @@ elif "Forecast" in page:
             )
             st.plotly_chart(fig_fc, use_container_width=True)
 
-            # Forecast table
+            #Forecast table
             st.markdown('<div class="section-header">📋 Forecast Table</div>',
                         unsafe_allow_html=True)
             st.dataframe(
@@ -1226,7 +1226,7 @@ elif "Forecast" in page:
 
 
 
-# SECTION 4 — COMMODITY EXPLORER
+#COMMODITY EXPLORER
 
 elif "Explorer" in page:
     st.markdown("##  Commodity Explorer")
@@ -1238,7 +1238,7 @@ elif "Explorer" in page:
     cat_ex = commodity_to_cat.get(sel_comm_ex, "N/A")
     st.caption(f"**Category:** {cat_ex}")
 
-    # Stats row
+    #Stats row
     ea, eb, ec, ed, ee = st.columns(5)
     stats_ex = [
         (ea, "Average Price",  f"₱{df_ex['price'].mean():.2f}"),
@@ -1253,7 +1253,7 @@ elif "Explorer" in page:
             <div class="kpi-value">{val}</div>
         </div>""", unsafe_allow_html=True)
 
-    # Full historical trend
+    #The full historical trend
     st.markdown('<div class="section-header"> Full Historical Price Trend</div>',
                 unsafe_allow_html=True)
     ex_trend = (df_ex.groupby(["year", "month"])["price"].mean().reset_index())
@@ -1283,7 +1283,7 @@ elif "Explorer" in page:
     )
     st.plotly_chart(fig_ex1, use_container_width=True)
 
-    # Seasonal heatmap
+    #Seasonal heatmap
     ex_heat = (df_ex.groupby(["year", "month"])["price"].mean().reset_index()
                .pivot(index="year", columns="month", values="price"))
     ex_heat.columns = [month_names_full[m] for m in ex_heat.columns]
@@ -1301,7 +1301,7 @@ elif "Explorer" in page:
                                tickfont=dict(color="#3A2A1A"),
                                title_font=dict(color="#3A2A1A")))
     st.plotly_chart(fig_heat, use_container_width=True)
-    # Quick forecast for this commodity
+    #Quick forecast for this commodity
     st.markdown('<div class="section-header"> Quick Forecast (Next 6 Months)</div>',
                 unsafe_allow_html=True)
 
@@ -1321,7 +1321,7 @@ elif "Explorer" in page:
     st.caption(f"Using best model: **{best_model_name}**")
 
 
-# SECTION 5 — MODEL PERFORMANCE
+#MODEL PERFORMANCE
 
 elif "Performance" in page:
     st.markdown("##  Model Performance")
@@ -1330,12 +1330,12 @@ elif "Performance" in page:
     metrics_df = pd.DataFrame(model_metrics).T.reset_index()
     metrics_df.columns = ["Model", "MAE (₱)", "RMSE (₱)", "R Score"]
 
-    # Performance Table
+    #Performance Table
     st.markdown('<div class="section-header"> Model Comparison Table</div>',
                 unsafe_allow_html=True)
 
 
-    # Build table as HTML for full style control
+    #Build table as HTML for full style control
     table_rows = ""
     for _, row in metrics_df.iterrows():
         is_best = row["Model"] == best_model_name
@@ -1376,7 +1376,7 @@ elif "Performance" in page:
 
     st.markdown(table_html, unsafe_allow_html=True)
 
-    # Best model callout
+    #Best model possible callout
     bm = model_metrics[best_model_name]
     st.markdown(
         f'<div style="background:#D1FAE5; border-left:4px solid #065F46; '
@@ -1389,7 +1389,7 @@ elif "Performance" in page:
     )
 
     
-    # Grouped bar chart
+    #Grouped bar chart
     st.markdown('<div class="section-header"> Performance Comparison Charts</div>',
                 unsafe_allow_html=True)
 
@@ -1397,14 +1397,14 @@ elif "Performance" in page:
 
 
     for metric in ["MAE (₱)", "RMSE (₱)", "R Score"]:
-      subset = m_long[m_long["Metric"] == metric].reset_index(drop=True)  # ← reset index
+      subset = m_long[m_long["Metric"] == metric].reset_index(drop=True)  #reset the index
       fig_m  = px.bar(subset, x="Model", y="Value", color="Model",
                       color_discrete_sequence=PALETTE,
                       title=f"{metric} by Model",
                       labels={"Value": metric},
-                      text="Value")  # ← let px.bar handle the text directly
+                      text="Value")  #px.bar handles the text directly
       fig_m.update_traces(
-          texttemplate="%{text:.4f}",  # ← format it here instead
+          texttemplate="%{text:.4f}",  #format 
           textposition="outside",
           textfont=dict(color="#3A2A1A")
       )
@@ -1421,7 +1421,7 @@ elif "Performance" in page:
 
 
 
-    # Prediction vs actual scatter
+    #Prediction vs actual scatter
     st.markdown('<div class="section-header"> Predicted vs Actual (Test Set Sample)</div>',
                 unsafe_allow_html=True)
 
@@ -1443,7 +1443,7 @@ elif "Performance" in page:
             labels={"x": "Actual Price (₱)", "y": "Predicted Price (₱)"},
             title=name, color_discrete_sequence=[PALETTE[i]]
         )
-        # Perfect prediction line
+        #Perfect prediction line
         mn = min(y_test_v[idx].min(), y_pred_v[idx].min())
         mx = max(y_test_v[idx].max(), y_pred_v[idx].max())
         fig_sc.add_shape(type="line", x0=mn, y0=mn, x1=mx, y1=mx,
@@ -1462,7 +1462,7 @@ elif "Performance" in page:
                "Points close to the line = accurate model.")
 
 
-# SECTION 6 — DECISION SUPPORT INSIGHTS
+#DECISION SUPPORT INSIGHTS
 
 elif "Insights" in page:
     st.markdown("##  Decision Support Insights")
@@ -1471,7 +1471,7 @@ elif "Insights" in page:
     today = date.today()
     curr_year, curr_month = today.year, today.month
 
-    # Generate next-month predictions for ALL commodities
+    #Generate next-month predictions for all commodities
     next_month = curr_month + 1 if curr_month < 12 else 1
     next_year  = curr_year  if curr_month < 12 else curr_year + 1
 
@@ -1492,7 +1492,7 @@ elif "Insights" in page:
             next_year, next_month, cid, catid
         )
 
-    # Calculate price change %
+    #Calculate price change percent
     changes = {
         comm: ((predictions_next[comm] - predictions_now[comm])
                / predictions_now[comm] * 100)
@@ -1500,7 +1500,7 @@ elif "Insights" in page:
         for comm in commodities
     }
 
-    # Consumer Alerts
+    #Consumer Alerts
     st.markdown('<div class="section-header"> Monthly Consumer Price Alerts</div>',
                 unsafe_allow_html=True)
     st.markdown(f"**Forecast Period:** {month_names_full[next_month]} {next_year} "
@@ -1543,7 +1543,7 @@ elif "Insights" in page:
                 unsafe_allow_html=True
             )
 
-    # Budget Planning Table
+    #Budget Planning Table
     st.markdown('<div class="section-header"> Budget Planning Guide — Next Month Forecast</div>',
                 unsafe_allow_html=True)
 
@@ -1574,7 +1574,7 @@ elif "Insights" in page:
         use_container_width=True, height=400
     )
 
-    # General insights
+    #General insights
     st.markdown('<div class="section-header"> General Consumer Recommendations</div>',
                 unsafe_allow_html=True)
     st.markdown("""
@@ -1601,7 +1601,7 @@ elif "Insights" in page:
     """, unsafe_allow_html=True)
 
 
-# SECTION 7 — ABOUT THE PROJECT
+#ABOUT THE PROJECT
 
 
 elif "About" in page:
@@ -1669,7 +1669,7 @@ elif "About" in page:
         - Accuracy depends on WFP dataset quality
         - Selected commodities only (56 items from WFP data)
         """)
-
+# Developers
     st.markdown("### Researchers")
     st.markdown("""
     <div class="kpi-card">
@@ -1688,7 +1688,7 @@ elif "About" in page:
     </em>
     </div>
     """, unsafe_allow_html=True)
-
+# References
     st.markdown("###  References")
     st.markdown("""
     - PSA Philippines — Consumer Price Index (2026)
