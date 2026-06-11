@@ -1634,14 +1634,13 @@ elif "About" in page:
 
         st.markdown("###  Dataset Information")
         st.markdown(f"""
-        - **Source** : WFP / HDX — Philippines Food Prices
+        - **Source** : https://data.humdata.org/dataset/wfp-food-prices-for-philippines
         - **Provider** : World Food Programme (UN)
         - **Coverage** : Cavite, 2020–2026
         - **Records (filtered)** : {len(df):,} entries
         - **Commodities** : {df['commodity'].nunique()} tracked items
         - **Update Frequency** : Monthly
         - **License** : CC BY-IGO
-        - **Download** : Kaggle (usmanlovescode)
         """)
 
     with c2:
